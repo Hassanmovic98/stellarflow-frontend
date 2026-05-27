@@ -14,7 +14,11 @@ import {
   TrendingUp, 
   ArrowUpRight 
 } from 'lucide-react';
-import { useTransformedCustomAddressField } from '@/app/hooks/useTransformedData';
+import {
+  getHealthBarColor,
+  STAKER_SLASHING_NO_EVENTS,
+  STAKER_SLASHING_WITH_EVENTS,
+} from '@/lib/classNameVariants';
 
 // --- Types ---
 interface StakerNode {
@@ -127,7 +131,7 @@ export default function StakingPage() {
                     <div className="flex items-center gap-2">
                       <div className="w-16 bg-gray-700 h-1.5 rounded-full overflow-hidden">
                         <div 
-                          className={`h-full ${node.healthFactor > 85 ? 'bg-emerald-500' : node.healthFactor > 70 ? 'bg-yellow-500' : 'bg-red-500'}`} 
+                          className={`h-full ${getHealthBarColor(node.healthFactor)}`} 
                           style={{ width: `${node.healthFactor}%` }} 
                         />
                       </div>
@@ -136,7 +140,9 @@ export default function StakingPage() {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
-                      node.totalSlashingEvents === 0 ? 'bg-gray-800 text-gray-400' : 'bg-red-500/10 text-red-400 border border-red-500/10'
+                      node.totalSlashingEvents === 0 
+                        ? STAKER_SLASHING_NO_EVENTS 
+                        : STAKER_SLASHING_WITH_EVENTS
                     }`}>
                       {node.totalSlashingEvents} slash events
                     </span>
