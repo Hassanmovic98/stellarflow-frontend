@@ -16,6 +16,7 @@ import {
   WifiOff,
   Cpu
 } from 'lucide-react';
+import { useRafThrottle } from '../hooks/useRafThrottle';
 import { useXdrWorker } from './useXdrWorker';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,13 +29,15 @@ const MOCK_LOGS: LogEntry[] = [
   { id: '102', timestamp: '2026-04-28 12:35:12', type: 'security', severity: 'critical', message: 'Unauthorized API attempt detected from IP 192.168.1.1', actor: 'System Guard' },
   { id: '103', timestamp: '2026-04-28 12:30:45', type: 'system', severity: 'warning', message: 'Regional Failover: Switching to Frankfurt Secondary', actor: 'Network Orchestrator' },
   { id: '104', timestamp: '2026-04-28 12:20:10', type: 'transaction', severity: 'info', message: 'XDR: BBBBBEEEEEEFFFFF...', actor: 'Binance Pan-Africa', txHash: '0xdef...456' },
-];
-
-export default function LogsPage() {
-  const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredResults, setFilteredResults] = useState<FilteredLogResult[]>(MOCK_LOGS.map(l => ({ item: l })));
-  const [isSearching, setIsSearching] = React.useState(false);
+  const [filter, setFilter] = useState<'all'|'info'|'warning'|'critical'>('all');
+  const [filteredResults, setFilteredResults] = useState<FilteredLogResult[]>(
+    MOCK_LOGS.map((l) => ({ item: l, matches: [] }))
+  );
+  const [isSearching, setIsSearching] = useState(false);
+
+  const throttledSetSearchQuery = useRafThrottle((v: string) => setSearchQuery(v));
+  const throttledSetFilter = useRafThrottle((v: string) => setFilter(v));
   const workerRef = React.useRef<Worker | null>(null);
 
   // ── XDR Worker (off-thread base64 → binary decoding) ──────────────────
@@ -178,19 +181,19 @@ export default function LogsPage() {
       <div className="bg-[#161b22] border border-gray-800 rounded-xl p-4 mb-6 flex flex-col md:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <Search className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${isSearching ? 'text-blue-500 animate-pulse' : 'text-gray-500'}`} size={18} />
-          <input 
-            type="text" 
-            placeholder="Filter logs by message, actor, or hash..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#0d1117] border border-gray-700 rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500 transition-colors"
-          />
+      <input
+        type="text"
+        placeholder="Filter logs by message, actor, or hash..."
+        value={searchQuery}
+        onChange={(e) => throttledSetSearchQuery(e.target.value)}
+        className="w-full bg-[#0d1117] border border-gray-700 rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+      />
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
           <Filter size={18} className="text-gray-500" />
-          <select 
+          <select
             className="bg-[#0d1117] border border-gray-700 rounded-md py-2 px-4 text-sm focus:outline-none"
-            onChange={(e) => setFilter(e.target.value)}
+            onChange={(e) => throttledSetFilter(e.target.value as any)}
           >
             <option value="all">All Severities</option>
             <option value="info">Info Only</option>

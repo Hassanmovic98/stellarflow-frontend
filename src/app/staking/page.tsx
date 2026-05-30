@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useDebounce } from '../hooks/useDebounce';
+import { useRafThrottle } from '../hooks/useRafThrottle';
 import { useTransformedCustomAddressField } from '@/app/hooks/useTransformedData';
 import { 
   ShieldCheck, 
@@ -43,6 +44,7 @@ const MOCK_STAKERS: StakerNode[] = [
 export default function StakingPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearch = useDebounce(searchTerm, 250);
+  const throttledSetSearchTerm = useRafThrottle((v: string) => setSearchTerm(v));
 
   const displayedStakers = useMemo(() => {
     const q = debouncedSearch.trim().toLowerCase();
@@ -96,7 +98,7 @@ export default function StakingPage() {
               type="text" 
               placeholder="Search active stakers by node name or identity..." 
               className="w-full bg-[#0d1117] border border-gray-700 rounded-md py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500 transition-colors"
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => throttledSetSearchTerm(e.target.value)}
             />
           </div>
           <button className="p-2 bg-[#0d1117] hover:bg-gray-800 rounded-md border border-gray-700 text-gray-400 self-end md:self-auto">
