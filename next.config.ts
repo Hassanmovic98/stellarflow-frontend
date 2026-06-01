@@ -1,4 +1,9 @@
 import type { NextConfig } from "next";
+import withBundleAnalyzer from "@next/bundle-analyzer";
+
+const withBundleAnalyzerConfig = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 // 1. Initialize the Bundle Analyzer plugin
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
@@ -41,6 +46,17 @@ const withPWA = require("next-pwa")({
 // 3. Your optimized Next.js base configurations
 const nextConfig: NextConfig = {
   reactCompiler: false,
+  swcMinify: true,
+  compress: true,
+  productionBrowserSourceMaps: false,
+  optimizeFonts: true,
+  optimizePackageImports: [
+    "lucide-react",
+    "react-icons",
+  ],
+};
+
+export default withBundleAnalyzerConfig(nextConfig);
   turbopack: {},
   images: {
     formats: ['image/avif', 'image/webp'],
