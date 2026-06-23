@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { ProgressBarProvider } from "./components/TopLoadingBar";
 import { UserProvider } from "./components/providers/UserProvider";
+import { SocketProvider } from "./components/providers/SocketProvider";
 import { WalletProvider } from "./components/providers/WalletProvider";
 import { QueryProvider } from "./components/providers/QueryProvider";
 import Script from "next/script";
