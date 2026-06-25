@@ -60,7 +60,7 @@ const OracleHealthIndicator = ({ status = "Online" }: OracleHealthIndicatorProps
         {/* Ping ring — only for Online */}
         {config.pulse && (
           <div
-            className={`absolute w-4 h-4 rounded-full ${config.dotColor} animate-ping opacity-30`}
+            className={`absolute w-4 h-4 rounded-full ${config.dotColor} status-ping opacity-30`}
           />
         )}
         {/* Core dot — animate-pulse only for Online */}
@@ -69,7 +69,7 @@ const OracleHealthIndicator = ({ status = "Online" }: OracleHealthIndicatorProps
             "relative w-3 h-3 rounded-full",
             config.dotColor,
             config.dotGlow,
-            config.pulse ? "animate-pulse" : "",
+            config.pulse ? "status-pulse" : "",
           ]
             .filter(Boolean)
             .join(" ")}
