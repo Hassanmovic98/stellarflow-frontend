@@ -8,7 +8,8 @@ import React, {
 } from "react";
 import { useRAFInterval } from "@/app/hooks/useRAFInterval";
 import { useInactivityDelay } from "@/app/hooks/useInactivityDelay";
-import { Icon, ICON_IDS } from "@/components/icons";
+import Icon from "@/components/icons/Icon";
+import { ICON_IDS } from "@/components/icons/iconIds";
 import { useProgressBar } from "./TopLoadingBar";
 import { useDebounce } from "../hooks/useDebounce";
 import { useRafThrottle } from "../hooks/useRafThrottle";
