@@ -6,24 +6,13 @@ import { useErrorTimeout } from "./useErrorTimeout";
 import { usePageVisibility } from "./usePageVisibility";
 import { useRAFInterval } from "./useRAFInterval";
 import type { AssetSymbol } from "@/config/assetSymbols";
-
-interface SocketMessage {
-  type: "price_update" | "delta_update";
-  assetId?: string;
-  data: PriceData | Partial<PriceData>;
-  timestamp: number;
-}
+import { WebSocketManager } from "@/utils/WebSocketManager";
 
 export interface UseSocketOptions {
   assetIds?: AssetSymbol[];
   enableDeltaUpdates?: boolean;
   reconnectInterval?: number;
   maxReconnectAttempts?: number;
-  /**
-   * Timeout in milliseconds before automatically clearing WebSocket errors.
-   * Set to 0 to disable auto-clear. Defaults to 5000ms.
-   * @default 5000
-   */
   errorTimeoutMs?: number;
 }
 
@@ -41,51 +30,26 @@ interface UseSocketReturn {
 export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
   const {
     assetIds = [],
-    reconnectInterval = 3000,
-    maxReconnectAttempts = 5,
     errorTimeoutMs = 5000,
   } = options;
 
   const [isConnected, setIsConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<PriceData | null>(null);
   const { error, setError } = useErrorTimeout({ timeoutMs: errorTimeoutMs });
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
-
-  const wsRef = useRef<WebSocket | null>(null);
-  const subscribedAssetsRef = useRef<Set<string>>(new Set(assetIds));
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-  const manuallyDisconnectedRef = useRef(false);
-  const isVisible = usePageVisibility();
-  const pageVisibleRef = useRef(isVisible);
   
-  // Batching refs for high-frequency updates
+  // Local tracking of subscribed assets for this component lifecycle context
+  const subscribedAssetsRef = useRef<Set<string>>(new Set(assetIds));
+  const isVisible = usePageVisibility();
   const pendingUpdatesRef = useRef<(PriceData | Partial<PriceData>)[]>([]);
 
-  // Refs keep options fresh inside callbacks without triggering re-renders or
-  // causing `connect` to be recreated on every tick.
-  const reconnectAttemptsRef = useRef(0);
-  const maxReconnectAttemptsRef = useRef(maxReconnectAttempts);
-  const reconnectIntervalRef = useRef(reconnectInterval);
+  const wsManager = WebSocketManager.getInstance();
 
-  // Sync option refs after render so in-flight callbacks always see the
-  // latest values without making `connect` depend on them directly.
-  // (Assigning to .current during render is forbidden by the React Compiler.)
-  useEffect(() => {
-    maxReconnectAttemptsRef.current = maxReconnectAttempts;
-    reconnectIntervalRef.current = reconnectInterval;
-  }, [maxReconnectAttempts, reconnectInterval]);
-
-  // Flush pending updates to state
   const flushPendingUpdates = useCallback(() => {
     if (pendingUpdatesRef.current.length === 0) return;
     
-    // Take all pending updates
     const updates = [...pendingUpdatesRef.current];
     pendingUpdatesRef.current.length = 0;
     
-    // Apply all updates in a single state commit
     setLastUpdate((prev: PriceData | null) => {
       let current = prev;
       for (const update of updates) {
@@ -190,17 +154,16 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
   const disconnect = useCallback(() => {
     manuallyDisconnectedRef.current = true;
 
-    // Flush any remaining pending updates
-    flushPendingUpdates();
+    const handleStatusChange = (status: boolean) => {
+      setIsConnected(status);
+    };
 
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
+    wsManager.subscribeToMessages(handleIncomingData);
+    wsManager.subscribeToStatus(handleStatusChange);
 
-    if (wsRef.current) {
-      wsRef.current.close(1000, "Manual disconnect");
-      wsRef.current = null;
+    // Initial asset registrations
+    if (subscribedAssetsRef.current.size > 0) {
+      wsManager.subscribeToAssets(Array.from(subscribedAssetsRef.current));
     }
 
     setIsConnected(false);
@@ -275,41 +238,13 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
       // Flush any remaining pending updates
       flushPendingUpdates();
 
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-      if (wsRef.current) {
-        wsRef.current.close(1000, "Component unmount");
-        wsRef.current = null;
-      }
-    };
-  }, [flushPendingUpdates]);
-  useEffect(() => {
-    pageVisibleRef.current = isVisible;
-
-    if (!isVisible) {
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-        reconnectTimeoutRef.current = null;
-      }
-
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(
-          JSON.stringify({
-            type: "unsubscribe",
-            assetIds: Array.from(subscribedAssetsRef.current),
-          }),
-        );
-      }
-
-      if (wsRef.current) {
-        wsRef.current.close(1000, "Page hidden");
-        wsRef.current = null;
-      }
-
-      setIsConnected(false);
-      return;
+  const disconnect = useCallback(() => {
+    // Manual local disconnection can simply clear local contextual tracking assets
+    if (subscribedAssetsRef.current.size > 0) {
+      wsManager.unsubscribeFromAssets(Array.from(subscribedAssetsRef.current));
     }
+    setIsConnected(false);
+  }, [wsManager]);
 
     if (!manuallyDisconnectedRef.current) {
       reconnectAttemptsRef.current = 0;
@@ -320,8 +255,7 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
     }
   }, [isVisible, connect]);
 
-  // Master layout clock batching: flushes updates inline with the single RAF loop
-  // every 350ms whenever the connection is alive and there are pending packets.
+  // Master layout clock batching matches performance guidelines
   useRAFInterval(
     flushPendingUpdates,
     350,
@@ -332,7 +266,7 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
     isConnected,
     lastUpdate,
     error,
-    reconnectAttempts,
+    reconnectAttempts: 0, // Handled automatically at network class layer now
     subscribeToAsset,
     unsubscribeFromAsset,
     disconnect,
