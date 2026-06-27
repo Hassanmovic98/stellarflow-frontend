@@ -402,7 +402,7 @@ const PriceFeedCard: React.FC<PriceFeedCardProps> = ({
         </div>
       )}
 
-      {/* ── Filter input (debounced 300ms) ── */}
+      {/* ── Filter input (debounced 250ms) ── */}
       <div className="relative mt-4">
         <input
           type="text"
