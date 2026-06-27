@@ -17,6 +17,7 @@ import { useErrorTimeout } from "../hooks/useErrorTimeout";
 import { Shimmer } from "@/components/skeletons/Shimmer";
 import { PriceFeedCardSkeleton } from "@/components/skeletons/PriceFeedCardSkeleton";
 import { getCachedHistory, getCachedHistorySync, setCachedHistory } from "../lib/historySync";
+import { PriceFeedCardSkeleton } from "@/components/skeletons/PriceFeedCardSkeleton";
 import { useMounted } from "@/app/hooks/useMounted";
 import { usePageVisibility } from "../hooks/usePageVisibility";
 import { POLLING_INTERVALS, INACTIVITY_CONFIG } from "@/config/cacheConfig";
@@ -210,7 +211,7 @@ const PriceFeedCard: React.FC<PriceFeedCardProps> = ({
     setLastRefresh(new Date());
     setLoading(false);
     setError(null);
-  }, [wsUpdate, enableWebSocket, isPageVisible, mounted, setError]); // `data` intentionally omitted — accessed via functional updater
+  }, [wsUpdate, enableWebSocket, isPageVisible, setError]); // `data` intentionally omitted — accessed via functional updater
 
   // Handle WebSocket errors
   useEffect(() => {
@@ -218,18 +219,18 @@ const PriceFeedCard: React.FC<PriceFeedCardProps> = ({
     if (wsError && enableWebSocket) {
       setError(`WebSocket error: ${wsError}`);
     }
-  }, [wsError, enableWebSocket, mounted, setError]);
+  }, [wsError, enableWebSocket, setError]);
 
   // Initial fetch + fallback polling (only when WebSocket is disabled or disconnected)
   const pollingActive = mounted && isPageVisible && (!enableWebSocket || !isConnected);
   useEffect(() => {
     if (!pollingActive) return;
 
-    const id = window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
       void load();
     }, 0);
 
-    return () => window.clearTimeout(id);
+    return () => window.clearTimeout(timer);
   }, [pollingActive, load]);
 
   // Scale the polling interval by the inactivity multiplier so that background
