@@ -1,103 +1,24 @@
 /**
- * SvgSprite — unified, static SVG symbol sheet.
+ * SvgSprite — loads the global external SVG symbol sheet from /public/static/sprite.svg
  *
  * Mount this ONCE at the root layout. All icon consumers reference symbols
- * via <use href="#icon-*"> which eliminates duplicate inline SVG weight
- * across high-density table views.
+ * via <use xlink:href="/static/sprite.svg#icon-*"> which eliminates duplicate inline SVG weight
+ * across high-density table views and leverages browser caching.
  *
- * Adding a new icon: append a <symbol> here and add its id to ICON_IDS in
- * `./iconIds.ts`. Keeping the data map separate ensures that consumers
- * importing only ICON_IDS or IconId never pull this React component into
- * their module graph, which is the key requirement for tree-shaking.
+ * Adding a new icon: append a <symbol> to /public/static/sprite.svg and add its id to ICON_IDS in
+ * `./iconIds.ts`. Keeping the sprite sheet as a static file allows the browser to cache it
+ * independently of the JavaScript bundle.
  */
 import { ICON_IDS } from "./iconIds";
 export { ICON_IDS } from "./iconIds";
 export type { IconId } from "./iconIds";
 
 export default function SvgSprite() {
-  return (
-    <svg
-      width="0"
-      height="0"
-      aria-hidden="true"
-      focusable="false"
-      style={{ position: "absolute", overflow: "hidden" }}
-    >
-      <defs>
-        {/* ── Admin tab icons ── */}
-        <symbol id={ICON_IDS.radio} viewBox="0 0 24 24">
-          <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9" />
-          <path d="M7.8 16.2a6 6 0 0 1 0-8.5" />
-          <circle cx="12" cy="12" r="2" />
-          <path d="M16.2 7.8a6 6 0 0 1 0 8.5" />
-          <path d="M19.1 4.9c3.9 3.9 3.9 10.2 0 14.1" />
-        </symbol>
-
-        <symbol id={ICON_IDS.fileCheck} viewBox="0 0 24 24">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <path d="M14 2v6h6" />
-          <path d="m9 15 2 2 4-4" />
-        </symbol>
-
-        <symbol id={ICON_IDS.network} viewBox="0 0 24 24">
-          <rect x="16" y="16" width="6" height="6" rx="1" />
-          <rect x="2" y="16" width="6" height="6" rx="1" />
-          <rect x="9" y="2" width="6" height="6" rx="1" />
-          <path d="M12 8v4" />
-          <path d="M5 16v-2a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2" />
-        </symbol>
-
-        <symbol id={ICON_IDS.sliders} viewBox="0 0 24 24">
-          <path d="M21 4H14" /><path d="M10 4H3" />
-          <path d="M21 12H12" /><path d="M8 12H3" />
-          <path d="M21 20H16" /><path d="M12 20H3" />
-          <circle cx="12" cy="4" r="2" />
-          <circle cx="10" cy="12" r="2" />
-          <circle cx="14" cy="20" r="2" />
-        </symbol>
-
-        {/* ── Relayer page icons ── */}
-        <symbol id={ICON_IDS.activity} viewBox="0 0 24 24">
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-        </symbol>
-
-        <symbol id={ICON_IDS.plus} viewBox="0 0 24 24">
-          <path d="M5 12h14" /><path d="M12 5v14" />
-        </symbol>
-
-        <symbol id={ICON_IDS.search} viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.35-4.35" />
-        </symbol>
-
-        <symbol id={ICON_IDS.moreVertical} viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="1" />
-          <circle cx="12" cy="5" r="1" />
-          <circle cx="12" cy="19" r="1" />
-        </symbol>
-
-        <symbol id={ICON_IDS.refresh} viewBox="0 0 24 24">
-          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-          <path d="M3 21v-5h5" />
-          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-          <path d="M21 3v5h-5" />
-        </symbol>
-
-        <symbol id={ICON_IDS.shield} viewBox="0 0 24 24">
-          <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
-          <path d="m9 12 2 2 4-4" />
-        </symbol>
-
-        <symbol id={ICON_IDS.clock} viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 6v6l4 2" />
-        </symbol>
-
-        <symbol id={ICON_IDS.signal} viewBox="0 0 24 24">
-          <path d="M2 20h.01" /><path d="M7 20v-4" />
-          <path d="M12 20v-8" /><path d="M17 20V8" />
-          <path d="M22 20V4" />
-        </symbol>
+  // The actual sprite sheet is hosted as a static file at /static/sprite.svg
+  // This component remains as a marker in the root layout for backwards compatibility
+  // and to maintain the existing import pattern
+  return null;
+}
 
         {/* ── Table row action icons ── */}
         <symbol id={ICON_IDS.arrowUpRight} viewBox="0 0 24 24">
@@ -396,4 +317,3 @@ export default function SvgSprite() {
     </svg>
   );
 }
-
