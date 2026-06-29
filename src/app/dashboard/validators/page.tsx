@@ -112,9 +112,18 @@ export default function ValidatorAuditPage() {
       </div>
 
       <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 shadow-2xl">
-        <h2 className="text-lg font-semibold mb-4 text-neutral-200 flex items-center gap-2">
-          <span>🛡️</span> Security Infrastructure Node Matrix
-        </h2>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <h2 className="text-lg font-semibold text-neutral-200 flex items-center gap-2">
+            <span>🛡️</span> Security Infrastructure Node Matrix
+          </h2>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search validators or addresses..."
+            className="w-full sm:w-64 rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-500 outline-none focus:border-lime-500/50 transition-colors"
+          />
+        </div>
         <div ref={scrollRef} className="overflow-auto max-h-[600px]">
           <table className="w-full text-left border-collapse">
             <thead className="sticky top-0 z-10 bg-neutral-900">
