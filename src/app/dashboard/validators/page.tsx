@@ -15,13 +15,31 @@ export default function ValidatorAuditPage() {
   const { validators } = data;
 
   const [filter, setFilter] = useState<"all" | "active" | "jailed">("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 250);
   const [selectedJailedValidator, setSelectedJailedValidator] =
     useState<ValidatorNode | null>(null);
 
   const filteredValidators = useMemo(() => {
-    if (filter === "all") return validators;
-    return validators.filter((v) => v.status === filter);
-  }, [validators, filter]);
+    let result = validators;
+    
+    // Apply status filter
+    if (filter !== "all") {
+      result = result.filter((v) => v.status === filter);
+    }
+    
+    // Apply search filter (only using debounced query to prevent excessive filtering)
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase();
+      result = result.filter(
+        (v) =>
+          v.name.toLowerCase().includes(query) ||
+          v.address.toLowerCase().includes(query)
+      );
+    }
+    
+    return result;
+  }, [validators, filter, debouncedSearchQuery]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
